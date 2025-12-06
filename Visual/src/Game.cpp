@@ -29,9 +29,21 @@ void Game::update()
         {
             int value = cells[environment_->index(i, j)].getPopulationCount();
             float t = std::clamp(value / 10.f, 0.f, 1.f); // normalize
+            sf::Uint8 intensity = static_cast<sf::Uint8>(t * 255);
+            sf::Color shade;
 
-            sf::Color shade(static_cast<sf::Uint8>(t * 255), static_cast<sf::Uint8>(t * 255),
-                            static_cast<sf::Uint8>(t * 255));
+            auto &unit = environment_->getGrid().at(environment_->index(i, j));
+
+            if (unit.isInfectious())
+            {
+                // Red tint: full red, reduce green/blue based on population
+                shade = sf::Color(intensity, intensity / 2, intensity / 2);
+            }
+            else
+            {
+                // Normal grayscale
+                shade = sf::Color(intensity, intensity, intensity);
+            }
 
             sf::RectangleShape rect(sf::Vector2f(cellSize_, cellSize_));
             rect.setPosition(static_cast<float>(j * cellSize_), static_cast<float>(i * cellSize_));

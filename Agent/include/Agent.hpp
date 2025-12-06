@@ -13,6 +13,16 @@ class Agent
         yPos = y;
     }
 
+    State &getState()
+    {
+        return state;
+    }
+
+    void setState(State newState)
+    {
+        state = newState;
+    }
+
   private:
     int xPos{0};
     int yPos{0};

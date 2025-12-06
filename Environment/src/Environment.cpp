@@ -21,6 +21,10 @@ Environment::Environment(int xLen, int yLen)
             grid_[index(i, j)] = unit;
         }
     }
+
+    // testing, set 1 guy to be infectious
+    grid_.at(index(0, 0)).getPopulation().at(0).setState(State::Infectious);
+
     newCells_ = grid_;
 }
 
@@ -53,9 +57,23 @@ void Environment::updateUnit(int i, int j)
     auto &unit = grid_.at(index(i, j));
     auto &pop = unit.getPopulation();
 
+    bool infectiousUnit = false;
+    for (auto &agent : pop)
+    {
+        if (agent.getState() == State::Infectious)
+        {
+            infectiousUnit = true;
+        }
+    }
+
     for (int k = pop.size() - 1; k >= 0; --k)
     {
         Agent &agent = pop[k];
+
+        if (infectiousUnit)
+        {
+            agent.setState(State::Infectious);
+        }
 
         std::vector<std::pair<int, int>> possibleMoves;
         for (int iDelta = -1; iDelta <= 1; ++iDelta)

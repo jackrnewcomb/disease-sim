@@ -29,9 +29,19 @@ class Unit
         return population.size();
     }
 
-    std::vector<Agent> getPopulation()
+    std::vector<Agent> &getPopulation()
     {
         return population;
+    }
+
+    bool isInfectious()
+    {
+        for (auto &agent : population)
+        {
+            if (agent.getState() == State::Infectious)
+                return true;
+        }
+        return false;
     }
 
     void AddPerson(Agent &agent)
