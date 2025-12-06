@@ -12,6 +12,7 @@ add_subdirectory(SFML)
 add_subdirectory(Agent)
 add_subdirectory(Environment)
 add_subdirectory(Execution)
+add_subdirectory(Visual)
 
 # Include header files
 include_directories(${PROJECT_SOURCE_DIR}/include)

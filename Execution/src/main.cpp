@@ -1,5 +1,6 @@
 
 #include "Environment.hpp"
+#include "Game.hpp"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -36,57 +37,62 @@ bool sanitizeArgMap(const std::map<std::string, std::string> &map)
  */
 int main(int argc, char *argv[])
 {
-    // maps arg types to their arg
-    std::map<std::string, std::string> argMap = {
-        {"-N", "256"}, // default grid size in points
-        {"-I", "100"}  // default number of iterations
-    };
-
-    // For each arg passed to the command line...
-    for (int i = 1; i < argc; i++)
     {
-        // Cast to a string
-        std::string arg = argv[i];
+        // maps arg types to their arg
+        std::map<std::string, std::string> argMap = {
+            {"-n", "8"},   // default number of threads
+            {"-c", "5"},   // default cell size
+            {"-x", "800"}, // default x-axis width
+            {"-y", "600"}, // default y-axis height
+        };
 
-        // If -q is in the args at all, terminate the program
-        if (arg == "-q")
+        // For each arg passed to the command line...
+        for (int i = 1; i < argc; i++)
         {
-            std::cout << "Quit directive received: Terminating program\n";
+            // Cast to a string
+            std::string arg = argv[i];
+
+            // If the arg contains a "-", the next arg should specify a value. Add it to the map and increment the argc
+            // counter
+            if (arg.find("-") != std::string::npos)
+            {
+                argMap[arg] = argv[i + 1];
+                i++;
+            }
+            // If the arg doesn't contain "-", the user did not format their arguments correctly. Pass a message to the
+            // console and move on
+            else
+            {
+                std::cerr << "Unexpected input " << arg << ", ignoring...\n";
+            }
+        }
+
+        // Check for clean inputs
+        bool clean = sanitizeArgMap(argMap);
+        if (!clean)
+        {
             return 0;
         }
 
-        // If the arg contains a "-", the next arg should specify a value. Add it to the map and increment the argc
-        // counter
-        if (arg.find("-") != std::string::npos)
+        // Initialize window sizes and cell sizes with the now-sanitized user input map
+        auto xWindowSize = std::stoi(argMap["-x"]);
+        auto yWindowSize = std::stoi(argMap["-y"]);
+        auto cellSize = std::stoi(argMap["-c"]);
+
+        // Initialize the Game and get a shared pointer to the grid
+        Game game(xWindowSize, yWindowSize, cellSize);
+        auto env = game.getEnvironment();
+
+        // General execution loop. Each iteration represents a frame
+        while (game.isRunning())
         {
-            argMap[arg] = argv[i + 1];
-            i++;
+
+            env->updateSEQ();
+
+            // Update the visuals
+            game.update();
         }
-        // If the arg doesn't contain "-", the user did not format their arguments correctly. Pass a message to the
-        // console and move on
-        else
-        {
-            std::cerr << "Unexpected input " << arg << ", ignoring...\n";
-        }
+
+        return 0;
     }
-
-    // Check for clean inputs
-    bool clean = sanitizeArgMap(argMap);
-    if (!clean)
-    {
-        // There was an error sanitizing the map. Abort
-        return -1;
-    }
-
-    int userInputSize = std::stoi(argMap["-N"]);
-    int userIterationSize = std::stoi(argMap["-I"]);
-    Environment environment;
-
-    for (int i = 0; i < userIterationSize; i++)
-    {
-        environment.Update();
-        std::cout << "Day " << i << "\n";
-    }
-
-    return 0;
 }

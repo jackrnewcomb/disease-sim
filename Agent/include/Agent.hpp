@@ -6,13 +6,16 @@ class Agent
 {
 
   public:
-    Agent()
+    Agent() = delete;
+    Agent(int x, int y)
     {
+        xPos = x;
+        yPos = y;
     }
 
   private:
-    double xPos{0.0};
-    double yPos{0.0};
+    int xPos{0};
+    int yPos{0};
 
     State state{State::Susceptible};
 };
