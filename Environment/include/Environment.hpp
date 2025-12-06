@@ -24,9 +24,31 @@ class Unit
         return true;
     }
 
-    int getPopulation()
+    int getPopulationCount()
     {
         return population.size();
+    }
+
+    std::vector<Agent> getPopulation()
+    {
+        return population;
+    }
+
+    void AddPerson(Agent &agent)
+    {
+        population.push_back(agent);
+    }
+
+    bool RemovePerson(Agent &agent)
+    {
+        auto it = std::find_if(population.begin(), population.end(),
+                               [&](const Agent &ag) { return &ag == &agent; }); // compare addresses
+        if (it != population.end())
+        {
+            population.erase(it);
+            return true;
+        }
+        return false;
     }
 
   private:
@@ -41,9 +63,9 @@ class Environment
   public:
     Environment(int xLen, int yLen);
 
-    void updateCell(int i, int j);
+    void update();
 
-    void updateSEQ();
+    void updateUnit(int i, int j);
 
     std::vector<Unit> &getGrid()
     {

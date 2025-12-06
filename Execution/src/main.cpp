@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         while (game.isRunning())
         {
 
-            env->updateSEQ();
+            env->update();
 
             // Update the visuals
             game.update();

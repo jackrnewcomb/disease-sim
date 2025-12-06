@@ -21,22 +21,72 @@ Environment::Environment(int xLen, int yLen)
             grid_[index(i, j)] = unit;
         }
     }
+    newCells_ = grid_;
 }
 
-void Environment::updateSEQ()
+void Environment::update()
 {
-    // For single threading, simply go through each cell and call updateCell()
-    for (int i = 0; i < rows_; i++)
+    // Reset newCells_ to empty units with correct positions
+    for (int i = 0; i < rows_; ++i)
     {
-        for (int j = 0; j < cols_; j++)
+        for (int j = 0; j < cols_; ++j)
         {
-            updateCell(i, j);
+            newCells_[index(i, j)] = Unit(i, j);
         }
     }
-    // Swap content so cells_ now holds the most up to date data
+
+    // Process movements
+    for (int i = 0; i < rows_; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+        {
+            updateUnit(i, j);
+        }
+    }
+
+    // Swap content so grid_ now holds the updated data
     grid_.swap(newCells_);
 }
 
-inline void Environment::updateCell(int i, int j)
+void Environment::updateUnit(int i, int j)
 {
+    auto &unit = grid_.at(index(i, j));
+    auto &pop = unit.getPopulation();
+
+    for (int k = pop.size() - 1; k >= 0; --k)
+    {
+        Agent &agent = pop[k];
+
+        std::vector<std::pair<int, int>> possibleMoves;
+        for (int iDelta = -1; iDelta <= 1; ++iDelta)
+        {
+            for (int jDelta = -1; jDelta <= 1; ++jDelta)
+            {
+                if (iDelta == 0 && jDelta == 0)
+                    continue;
+                int ni = i + iDelta;
+                int nj = j + jDelta;
+                if (ni >= 0 && ni < rows_ && nj >= 0 && nj < cols_)
+                    possibleMoves.push_back({ni, nj});
+            }
+        }
+
+        int choice = 0;
+        if (!possibleMoves.empty())
+        {
+            static std::random_device rd;
+            static std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, possibleMoves.size() - 1);
+            choice = dis(gen);
+        }
+
+        int newI = possibleMoves[choice].first;
+        int newJ = possibleMoves[choice].second;
+
+        // Move agent to new unit
+        newCells_[index(newI, newJ)].AddPerson(agent);
+
+        // Remove agent from old unit (not strictly necessary here, since old grid is discarded)
+        pop.erase(pop.begin() + k);
+    }
 }
