@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Environment.hpp"
+#include "Home.hpp"
 
 Game::Game(int xWin, int yWin, int cellSize)
 {
@@ -21,28 +22,28 @@ void Game::update()
 
     window_->clear();
 
-    auto &cells = environment_->getGrid();
-
     for (int i = 0; i < environment_->getRows(); ++i)
     {
         for (int j = 0; j < environment_->getCols(); ++j)
         {
-            int value = cells[environment_->index(i, j)].getPopulationCount();
-            float t = std::clamp(value / 10.f, 0.f, 1.f); // normalize
-            sf::Uint8 intensity = static_cast<sf::Uint8>(t * 255);
-            sf::Color shade;
+            Unit &unit = environment_->getGrid().at(environment_->index(i, j));
 
-            auto &unit = environment_->getGrid().at(environment_->index(i, j));
+            auto popCount = unit.getPopulationCount();
+            float popFactor = std::clamp(popCount / 10.f, 0.f, 1.f); // normalize for brightness
 
+            // Determine base color depending on derived class
+            auto color = unit.getBaseColor();
+
+            // Scale brightness by population
+            sf::Color shade(static_cast<sf::Uint8>(color.r * popFactor), static_cast<sf::Uint8>(color.g * popFactor),
+                            static_cast<sf::Uint8>(color.b * popFactor));
+
+            // Overlay red if there are infectious people
             if (unit.isInfectious())
             {
-                // Red tint: full red, reduce green/blue based on population
-                shade = sf::Color(intensity, intensity / 2, intensity / 2);
-            }
-            else
-            {
-                // Normal grayscale
-                shade = sf::Color(intensity, intensity, intensity);
+                shade.r = std::max(shade.r, static_cast<sf::Uint8>(200)); // boost red
+                shade.g = static_cast<sf::Uint8>(shade.g * 0.5f);
+                shade.b = static_cast<sf::Uint8>(shade.b * 0.5f);
             }
 
             sf::RectangleShape rect(sf::Vector2f(cellSize_, cellSize_));

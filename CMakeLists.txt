@@ -1,6 +1,16 @@
 # Minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
 
+# Ensure PDB files are generated for all Debug builds
+if (MSVC)
+    # Make sure compiler generates debug info
+    add_compile_options("$<$<CONFIG:Debug>:/Zi>")
+
+    # Make sure linker produces PDB for DLLs and EXEs
+    add_link_options("$<$<CONFIG:Debug>:/DEBUG>")
+endif()
+
+
 # Project name and version
 project(disease-sim VERSION 1.0)
 

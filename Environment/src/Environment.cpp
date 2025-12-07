@@ -1,4 +1,7 @@
 #include "Environment.hpp"
+#include "Home.hpp"
+#include "SocialHub.hpp"
+#include "Worksite.hpp"
 
 Environment::Environment(int xLen, int yLen)
 {
@@ -6,38 +9,47 @@ Environment::Environment(int xLen, int yLen)
     rows_ = xLen;
     cols_ = yLen;
 
-    // Set the size of cells_ and newCells_ to be the correct size of the grid
+    // Set the size of cells_ and newGrid_ to be the correct size of the grid
     grid_.resize(rows_ * cols_);
-    newCells_.resize(rows_ * cols_);
+    newGrid_.resize(rows_ * cols_);
 
-    // For each cell...
-    for (int i = 0; i < rows_; i++)
+    for (int i = 0; i < rows_; ++i)
     {
-        for (int j = 0; j < cols_; j++)
+        for (int j = 0; j < cols_; ++j)
         {
-            // Assign a random start
-            Unit unit(i, j);
+            Unit unit;
+            if (i % 7 == 0 && j % 7 == 0)
+                unit = Home(i, j);
+            else
+            {
+                unit = Unit(i, j);
+            }
+            // else if ((i + j) % 10 == 0)
+            //     unit = std::make_shared<SocialHub>(i, j);
+            // else
+            //     unit = std::make_shared<Home>(i, j);
             unit.SetStartingPopulation();
-            grid_[index(i, j)] = unit;
+            grid_.at(index(i, j)) = unit;
         }
     }
 
     // testing, set 1 guy to be infectious
     grid_.at(index(0, 0)).getPopulation().at(0).setState(State::Infectious);
 
-    newCells_ = grid_;
+    newGrid_ = grid_;
 }
 
 void Environment::update()
 {
-    // Reset newCells_ to empty units with correct positions
-    for (int i = 0; i < rows_; ++i)
-    {
-        for (int j = 0; j < cols_; ++j)
-        {
-            newCells_[index(i, j)] = Unit(i, j);
-        }
-    }
+    // Reset newGrid_ to empty units with correct positions
+    // for (int i = 0; i < rows_; ++i)
+    //{
+    //    for (int j = 0; j < cols_; ++j)
+    //    {
+    //        newGrid_[index(i, j)] = std::make_unique<Unit>(i, j);
+    //    }
+    //}
+    // ??????????????
 
     // Process movements
     for (int i = 0; i < rows_; ++i)
@@ -49,7 +61,7 @@ void Environment::update()
     }
 
     // Swap content so grid_ now holds the updated data
-    grid_.swap(newCells_);
+    grid_.swap(newGrid_);
 }
 
 void Environment::updateUnit(int i, int j)
@@ -102,7 +114,7 @@ void Environment::updateUnit(int i, int j)
         int newJ = possibleMoves[choice].second;
 
         // Move agent to new unit
-        newCells_[index(newI, newJ)].AddPerson(agent);
+        newGrid_[index(newI, newJ)].AddPerson(agent);
 
         // Remove agent from old unit (not strictly necessary here, since old grid is discarded)
         pop.erase(pop.begin() + k);
