@@ -8,7 +8,7 @@
 class SocialHub : public Unit
 {
   public:
-    SocialHub()
+    SocialHub(int x, int y) : Unit(x, y)
     {
     }
 

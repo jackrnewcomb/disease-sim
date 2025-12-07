@@ -1,15 +1,6 @@
 # Minimum CMake version required
 cmake_minimum_required(VERSION 3.10)
 
-# Ensure PDB files are generated for all Debug builds
-if (MSVC)
-    # Make sure compiler generates debug info
-    add_compile_options("$<$<CONFIG:Debug>:/Zi>")
-
-    # Make sure linker produces PDB for DLLs and EXEs
-    add_link_options("$<$<CONFIG:Debug>:/DEBUG>")
-endif()
-
 
 # Project name and version
 project(disease-sim VERSION 1.0)
@@ -23,8 +14,3 @@ add_subdirectory(Agent)
 add_subdirectory(Environment)
 add_subdirectory(Execution)
 add_subdirectory(Visual)
-
-# Include header files
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
-link_directories(${PROJECT_SOURCE_DIR}/lib)

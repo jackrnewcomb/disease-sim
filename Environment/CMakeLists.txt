@@ -12,7 +12,7 @@ file(GLOB_RECURSE SOURCES
 )
 
 # Create a library from these files
-add_library(environment SHARED ${SOURCES})
+add_library(environment ${SOURCES})
 include_directories(${PROJECT_SOURCE_DIR}/../SFML/include)
 link_directories(${PROJECT_SOURCE_DIR}/../SFML/lib)
 

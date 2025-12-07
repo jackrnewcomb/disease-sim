@@ -5,118 +5,94 @@
 
 Environment::Environment(int xLen, int yLen)
 {
+
     // Initialize row/column members
     rows_ = xLen;
     cols_ = yLen;
 
-    // Set the size of cells_ and newGrid_ to be the correct size of the grid
-    grid_.resize(rows_ * cols_);
-    newGrid_.resize(rows_ * cols_);
-
+    grid_.reserve(rows_ * cols_); // pre-allocate memory
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
         {
-            Unit unit;
-            if (i % 7 == 0 && j % 7 == 0)
-                unit = Home(i, j);
+            if (i == 5 && j == 5)
+                grid_.emplace_back(Home(i, j));
+            else if (i == 25 && j == 25)
+                grid_.emplace_back(Worksite(i, j));
             else
-            {
-                unit = Unit(i, j);
-            }
-            // else if ((i + j) % 10 == 0)
-            //     unit = std::make_shared<SocialHub>(i, j);
-            // else
-            //     unit = std::make_shared<Home>(i, j);
-            unit.SetStartingPopulation();
-            grid_.at(index(i, j)) = unit;
+                grid_.emplace_back(Unit(i, j));
         }
     }
 
     // testing, set 1 guy to be infectious
-    grid_.at(index(0, 0)).getPopulation().at(0).setState(State::Infectious);
+    // grid_.at(index(0, 0)).getPopulation().at(0).setState(State::Infectious);
 
-    newGrid_ = grid_;
+    // testing, add 1 guy
+    grid_.at(index(5, 5)).SetStartingPopulation();
+    grid_.at(index(5, 5)).getPopulation().at(0)->setState(State::Infectious);
 }
+
+struct Move
+{
+    std::shared_ptr<Agent> agent;
+    int fromI, fromJ;
+    int toI, toJ;
+};
 
 void Environment::update()
 {
-    // Reset newGrid_ to empty units with correct positions
-    // for (int i = 0; i < rows_; ++i)
-    //{
-    //    for (int j = 0; j < cols_; ++j)
-    //    {
-    //        newGrid_[index(i, j)] = std::make_unique<Unit>(i, j);
-    //    }
-    //}
-    // ??????????????
+    std::vector<Move> moves;
+    moves.reserve(1024);
 
-    // Process movements
+    // decide moves for every cell exactly once
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
         {
-            updateUnit(i, j);
-        }
-    }
+            auto &pop = grid_[index(i, j)].getPopulation();
 
-    // Swap content so grid_ now holds the updated data
-    grid_.swap(newGrid_);
-}
+            bool infectious = false;
+            for (auto &agent : pop)
+                if (agent->getState() == State::Infectious)
+                    infectious = true;
 
-void Environment::updateUnit(int i, int j)
-{
-    auto &unit = grid_.at(index(i, j));
-    auto &pop = unit.getPopulation();
-
-    bool infectiousUnit = false;
-    for (auto &agent : pop)
-    {
-        if (agent.getState() == State::Infectious)
-        {
-            infectiousUnit = true;
-        }
-    }
-
-    for (int k = pop.size() - 1; k >= 0; --k)
-    {
-        Agent &agent = pop[k];
-
-        if (infectiousUnit)
-        {
-            agent.setState(State::Infectious);
-        }
-
-        std::vector<std::pair<int, int>> possibleMoves;
-        for (int iDelta = -1; iDelta <= 1; ++iDelta)
-        {
-            for (int jDelta = -1; jDelta <= 1; ++jDelta)
+            for (auto &agent : pop)
             {
-                if (iDelta == 0 && jDelta == 0)
-                    continue;
-                int ni = i + iDelta;
-                int nj = j + jDelta;
-                if (ni >= 0 && ni < rows_ && nj >= 0 && nj < cols_)
-                    possibleMoves.push_back({ni, nj});
+                if (infectious)
+                    agent->setState(State::Infectious);
+
+                // find neighboring cells
+                std::vector<std::pair<int, int>> possibleMoves;
+                for (int di = -1; di <= 1; ++di)
+                {
+                    for (int dj = -1; dj <= 1; ++dj)
+                    {
+                        if (di == 0 && dj == 0)
+                            continue;
+                        int ni = i + di;
+                        int nj = j + dj;
+                        if (ni >= 0 && ni < rows_ && nj >= 0 && nj < cols_)
+                            possibleMoves.push_back({ni, nj});
+                    }
+                }
+
+                if (!possibleMoves.empty())
+                {
+                    static std::random_device rd;
+                    static std::mt19937 gen(rd());
+                    std::uniform_int_distribution<> dis(0, possibleMoves.size() - 1);
+                    int choice = dis(gen);
+
+                    moves.push_back({agent, i, j, possibleMoves[choice].first, possibleMoves[choice].second});
+                }
             }
         }
+    }
 
-        int choice = 0;
-        if (!possibleMoves.empty())
-        {
-            static std::random_device rd;
-            static std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, possibleMoves.size() - 1);
-            choice = dis(gen);
-        }
-
-        int newI = possibleMoves[choice].first;
-        int newJ = possibleMoves[choice].second;
-
-        // Move agent to new unit
-        newGrid_[index(newI, newJ)].AddPerson(agent);
-
-        // Remove agent from old unit (not strictly necessary here, since old grid is discarded)
-        pop.erase(pop.begin() + k);
+    // PHASE 2: apply all moves
+    for (auto &m : moves)
+    {
+        grid_[index(m.fromI, m.fromJ)].RemovePerson(m.agent);
+        grid_[index(m.toI, m.toJ)].AddPerson(m.agent);
     }
 }

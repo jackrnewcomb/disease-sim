@@ -72,9 +72,6 @@ class Environment
     // The flattened 1D vector of cells
     std::vector<Unit> grid_;
 
-    // The "next" vector after the update (required to avoid overlapping cell statuses)
-    std::vector<Unit> newGrid_;
-
     // Random Number Generator
     std::default_random_engine generator;
 };

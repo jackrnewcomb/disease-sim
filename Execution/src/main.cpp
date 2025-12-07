@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
         // maps arg types to their arg
         std::map<std::string, std::string> argMap = {
             {"-n", "8"},   // default number of threads
-            {"-c", "5"},   // default cell size
+            {"-c", "20"},  // default cell size
             {"-x", "800"}, // default x-axis width
             {"-y", "600"}, // default y-axis height
         };
@@ -83,13 +83,23 @@ int main(int argc, char *argv[])
         Game game(xWindowSize, yWindowSize, cellSize);
         auto env = game.getEnvironment();
 
-        // General execution loop. Each iteration represents a frame
+        sf::Clock clock;
+        const float timeStep = 1.0f / 10.0f; // 1 updates/sec
+        float accumulator = 0.0f;
+
         while (game.isRunning())
         {
+            float dt = clock.restart().asSeconds();
+            accumulator += dt;
 
-            env->update();
+            // Run environment update at fixed intervals
+            while (accumulator >= timeStep)
+            {
+                env->update();
+                accumulator -= timeStep;
+            }
 
-            // Update the visuals
+            // Always draw each frame
             game.update();
         }
 

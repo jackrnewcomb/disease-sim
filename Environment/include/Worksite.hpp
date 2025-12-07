@@ -8,8 +8,9 @@
 class Worksite : public Unit
 {
   public:
-    Worksite()
+    Worksite(int x, int y) : Unit(x, y)
     {
+        color = sf::Color(180, 180, 255);
     }
 
   private:

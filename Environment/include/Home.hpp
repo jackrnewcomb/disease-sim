@@ -8,9 +8,6 @@
 class Home : public Unit
 {
   public:
-    Home()
-    {
-    }
     Home(int x, int y) : Unit(x, y)
     {
         color = sf::Color(180, 255, 180);

@@ -1,16 +1,13 @@
 #pragma once
 
 #include "State.hpp"
+#include <SFML/Graphics.hpp>
 
 class Agent
 {
-
   public:
-    Agent() = delete;
-    Agent(int x, int y)
+    Agent(int x, int y) : xPos(x), yPos(y), xHome(x), yHome(y)
     {
-        xPos = x;
-        yPos = y;
     }
 
     State &getState()
@@ -23,9 +20,14 @@ class Agent
         state = newState;
     }
 
-  private:
-    int xPos{0};
-    int yPos{0};
+    void setPosition(int x, int y)
+    {
+        xPos = x;
+        yPos = y;
+    }
 
+  private:
+    int xPos, yPos;
+    int xHome, yHome;
     State state{State::Susceptible};
 };

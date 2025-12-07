@@ -1,6 +1,7 @@
 #pragma once
 #include "Agent.hpp"
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <random>
 #include <vector>
 
@@ -8,19 +9,16 @@
 class Unit
 {
   public:
-    Unit()
+    Unit() = delete;
+
+    Unit(int x, int y) : xPos(x), yPos(y)
     {
-    }
-    Unit(int x, int y)
-    {
-        xPos = x;
-        yPos = y;
     }
 
     bool SetStartingPopulation()
     {
         // One person, to start
-        Agent agent(xPos, yPos);
+        auto agent = std::make_shared<Agent>(xPos, yPos);
         population = {agent};
         return true;
     }
@@ -30,7 +28,7 @@ class Unit
         return population.size();
     }
 
-    std::vector<Agent> &getPopulation()
+    std::vector<std::shared_ptr<Agent>> &getPopulation()
     {
         return population;
     }
@@ -39,27 +37,21 @@ class Unit
     {
         for (auto &agent : population)
         {
-            if (agent.getState() == State::Infectious)
+            if (agent->getState() == State::Infectious)
                 return true;
         }
         return false;
     }
 
-    void AddPerson(Agent &agent)
+    void AddPerson(std::shared_ptr<Agent> agent)
     {
         population.push_back(agent);
+        agent->setPosition(xPos, yPos);
     }
 
-    bool RemovePerson(Agent &agent)
+    void RemovePerson(std::shared_ptr<Agent> agent)
     {
-        auto it = std::find_if(population.begin(), population.end(),
-                               [&](const Agent &ag) { return &ag == &agent; }); // compare addresses
-        if (it != population.end())
-        {
-            population.erase(it);
-            return true;
-        }
-        return false;
+        population.erase(std::remove(population.begin(), population.end(), agent), population.end());
     }
 
     sf::Color getBaseColor() const
@@ -68,7 +60,7 @@ class Unit
     }
 
   protected:
-    std::vector<Agent> population;
+    std::vector<std::shared_ptr<Agent>> population;
     int xPos{0};
     int yPos{0};
     sf::Color color = sf::Color::White;

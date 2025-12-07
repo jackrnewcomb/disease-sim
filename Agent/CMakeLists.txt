@@ -11,7 +11,11 @@ file(GLOB_RECURSE SOURCES
 )
 
 # Create a library from these files
-add_library(agent SHARED ${SOURCES})
+add_library(agent ${SOURCES})
+include_directories(${PROJECT_SOURCE_DIR}/../SFML/include)
+
+link_directories(${PROJECT_SOURCE_DIR}/../SFML/lib)
+target_link_libraries(agent PUBLIC sfml-graphics)
 
 # Set C++ standard (optional)
 target_compile_features(agent PUBLIC cxx_std_17)

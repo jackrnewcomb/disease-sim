@@ -28,29 +28,31 @@ void Game::update()
         {
             Unit &unit = environment_->getGrid().at(environment_->index(i, j));
 
-            auto popCount = unit.getPopulationCount();
-            float popFactor = std::clamp(popCount / 10.f, 0.f, 1.f); // normalize for brightness
+            //
+            // 1. Draw the UNIT background color
+            //
+            sf::RectangleShape cell(sf::Vector2f(cellSize_, cellSize_));
+            cell.setPosition(j * cellSize_, i * cellSize_);
+            cell.setFillColor(unit.getBaseColor());
+            window_->draw(cell);
 
-            // Determine base color depending on derived class
-            auto color = unit.getBaseColor();
-
-            // Scale brightness by population
-            sf::Color shade(static_cast<sf::Uint8>(color.r * popFactor), static_cast<sf::Uint8>(color.g * popFactor),
-                            static_cast<sf::Uint8>(color.b * popFactor));
-
-            // Overlay red if there are infectious people
-            if (unit.isInfectious())
+            //
+            // 2. Draw AGENT DOTS on top
+            //
+            for (auto &agent : unit.getPopulation())
             {
-                shade.r = std::max(shade.r, static_cast<sf::Uint8>(200)); // boost red
-                shade.g = static_cast<sf::Uint8>(shade.g * 0.5f);
-                shade.b = static_cast<sf::Uint8>(shade.b * 0.5f);
+                sf::CircleShape dot(cellSize_ * 0.25f);
+                dot.setOrigin(dot.getRadius(), dot.getRadius());
+
+                dot.setPosition(j * cellSize_ + cellSize_ * 0.5f, i * cellSize_ + cellSize_ * 0.5f);
+
+                if (agent->getState() == State::Infectious)
+                    dot.setFillColor(sf::Color(255, 80, 80));
+                else
+                    dot.setFillColor(sf::Color(230, 230, 230));
+
+                window_->draw(dot);
             }
-
-            sf::RectangleShape rect(sf::Vector2f(cellSize_, cellSize_));
-            rect.setPosition(static_cast<float>(j * cellSize_), static_cast<float>(i * cellSize_));
-            rect.setFillColor(shade);
-
-            window_->draw(rect);
         }
     }
 
