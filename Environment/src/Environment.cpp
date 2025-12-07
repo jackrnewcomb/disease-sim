@@ -30,6 +30,8 @@ Environment::Environment(int xLen, int yLen)
     // testing, add 1 guy
     grid_.at(index(5, 5)).SetStartingPopulation();
     grid_.at(index(5, 5)).getPopulation().at(0)->setState(State::Infectious);
+    grid_.at(index(5, 5)).getPopulation().at(0)->setHome(5, 5);
+    grid_.at(index(5, 5)).getPopulation().at(0)->setWorksite(25, 25);
 }
 
 struct Move
@@ -61,30 +63,35 @@ void Environment::update()
                 if (infectious)
                     agent->setState(State::Infectious);
 
-                // find neighboring cells
-                std::vector<std::pair<int, int>> possibleMoves;
-                for (int di = -1; di <= 1; ++di)
+                // if he's at home, go to work
+                std::pair<int, int> next;
+                if (agent->atHome())
                 {
-                    for (int dj = -1; dj <= 1; ++dj)
-                    {
-                        if (di == 0 && dj == 0)
-                            continue;
-                        int ni = i + di;
-                        int nj = j + dj;
-                        if (ni >= 0 && ni < rows_ && nj >= 0 && nj < cols_)
-                            possibleMoves.push_back({ni, nj});
-                    }
+                    next = agent->nextStep(agent->xWork, agent->yWork);
+                    agent->goingToWork = true;
+                    agent->goingHome = false;
+                }
+                else if (agent->atWork())
+                {
+                    next = agent->nextStep(agent->xHome, agent->yHome);
+                    agent->goingHome = true;
+                    agent->goingToWork = false;
+                }
+                else if (agent->goingToWork)
+                {
+                    next = agent->nextStep(agent->xWork, agent->yWork);
                 }
 
-                if (!possibleMoves.empty())
+                else if (agent->goingHome)
                 {
-                    static std::random_device rd;
-                    static std::mt19937 gen(rd());
-                    std::uniform_int_distribution<> dis(0, possibleMoves.size() - 1);
-                    int choice = dis(gen);
-
-                    moves.push_back({agent, i, j, possibleMoves[choice].first, possibleMoves[choice].second});
+                    next = agent->nextStep(agent->xHome, agent->yHome);
                 }
+                else
+                {
+                    // ???
+                }
+
+                moves.push_back({agent, i, j, next.first, next.second});
             }
         }
     }
